@@ -35,7 +35,6 @@ public class EvaluationsController {
 
     /**
      * 评论修改
-     *
      * @return Result<String>
      */
     @Protector
@@ -47,7 +46,6 @@ public class EvaluationsController {
 
     /**
      * 查询内容下的全部评论
-     *
      * @return Result<String>
      */
     @Protector
@@ -60,7 +58,6 @@ public class EvaluationsController {
 
     /**
      * 分页查询评论
-     *
      * @return Result<String>
      */
     @Pager
