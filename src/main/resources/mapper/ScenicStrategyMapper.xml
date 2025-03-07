@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.ScenicStrategyMapper">
+
+<!--  新增攻略  -->
+    <insert id="save">
+        INSERT INTO scenic_strategy(id,
+                                    user_id,
+                                    scenic_id,
+                                    cover,
+                                    title,
+                                    content,
+                                    is_audit,
+                                    create_time)
+        VALUES (#{id},
+                #{userId},
+                #{scenicId},
+                #{cover},
+                #{title},
+                #{content},
+                #{isAudit},
+                #{createTime})
+    </insert>
+
+<!--  批量删除攻略  -->
+    <delete id="batchDelete">
+        DELETE FROM scenic_strategy
+        WHERE id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+<!--  修改攻略  -->
+    <update id="update">
+        UPDATE scenic_strategy
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="scenicId != null">
+                scenic_id = #{scenicId},
+            </if>
+            <if test="cover != null and cover != ''">
+                cover = #{cover},
+            </if>
+            <if test="title != null and title != ''">
+                title = #{title},
+            </if>
+            <if test="content != null and content != ''">
+                content = #{content},
+            </if>
+            <if test="isAudit != null">
+                is_audit = #{isAudit},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+<!--  分页查询  -->
+    <select id="query" resultMap="BaseQueryResultMap">
+        SELECT scenic_strategy.id,
+               scenic_strategy.user_id,
+               scenic_strategy.scenic_id,
+               scenic_strategy.cover,
+               scenic_strategy.title,
+               scenic_strategy.content,
+               scenic_strategy.is_audit,
+               scenic_strategy.create_time,
+               user.user_name AS user_name,
+               user.user_avatar AS user_avatar,
+               scenic.name AS scenic_name
+        FROM scenic_strategy INNER JOIN user ON scenic_strategy.user_id = user.id
+                            INNER JOIN scenic ON scenic_strategy.scenic_id = scenic.id
+        <where>
+            <if test="id != null">
+                AND scenic_strategy.id = #{id}
+            </if>
+            <if test="isAudit != null">
+                AND scenic_strategy.is_audit = #{isAudit}
+            </if>
+            <if test="title != null and title != ''">
+                AND scenic_strategy.title LIKE CONCAT('%',#{title},'%')
+            </if>
+            <if test="scenicId != null">
+                AND scenic_strategy.scenic_id = #{scenicId}
+            </if>
+            <if test="userId != null">
+                AND scenic_strategy.user_id = #{userId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic_strategy.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+        ORDER BY scenic_strategy.id
+        <if test="current != null and size != null">
+            LIMIT #{current}, #{size}
+        </if>
+    </select>
+
+<!--   分页查询总条数 -->
+    <select id="queryTotal" resultType="integer">
+        SELECT COUNT(*)
+        FROM scenic_strategy INNER JOIN user ON scenic_strategy.user_id = user.id
+                            INNER JOIN scenic ON scenic_strategy.scenic_id = scenic.id
+        <where>
+            <if test="id != null">
+                AND scenic_strategy.id = #{id}
+            </if>
+            <if test="isAudit != null">
+                AND scenic_strategy.is_audit = #{isAudit}
+            </if>
+            <if test="title != null and title != ''">
+                AND scenic_strategy.title LIKE CONCAT('%',#{title},'%')
+            </if>
+            <if test="scenicId != null">
+                AND scenic_strategy.scenic_id = #{scenicId}
+            </if>
+            <if test="userId != null">
+                AND scenic_strategy.user_id = #{userId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic_strategy.create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+    </select>
+
+    
+    <resultMap id="BaseQueryResultMap" type="cn.kmbeast.pojo.vo.ScenicStrategyVO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="scenic_id" property="scenicId"/>
+        <result column="cover" property="cover"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="is_audit" property="isAudit"/>
+        <result column="create_time" property="createTime"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_avatar" property="userAvatar"/>
+        <result column="scenic_name" property="scenicName"/>
+    </resultMap>
+</mapper>

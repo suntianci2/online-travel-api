@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.HotelRoomMapper">
+
+    <!--  增加的sql语句  -->
+    <insert id="save">
+        INSERT INTO hotel_room(name,
+                           hotel_id,
+                           cover,
+                           price,
+                           discount,
+                           detail,
+                           create_time)
+        VALUES(#{name},
+               #{hotelId},
+               #{cover},
+               #{price},
+               #{discount},
+               #{detail},
+               #{createTime})
+    </insert>
+
+    <!--  批量删除酒店  -->
+    <delete id="batchDelete">
+        DELETE FROM hotel_room
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--  修改酒店信息  -->
+    <update id="update">
+        UPDATE hotel_room
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="hotelId != null">
+                hotel_id = #{hotelId},
+            </if>
+            <if test="cover != null and cover != ''">
+                cover = #{cover},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="discount != null">
+                discount = #{discount},
+            </if>
+            <if test="detail != null and detail != ''">
+                detail = #{detail},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+<!--  分页查询  -->
+<!--  使用子查询补充新增需求  -->
+<!--  使用ROUND函数保留小数位数  -->
+    <select id="query" resultMap="PageQueryResultMap">
+        SELECT hotel_room.id,
+                hotel_room.name,
+                hotel_room.hotel_id,
+                hotel_room.cover,
+                hotel_room.price,
+                hotel_room.discount,
+                hotel_room.detail,
+                hotel_room.create_time,
+                hotel.name AS hotel_name
+        FROM hotel_room INNER JOIN hotel ON hotel_room.hotel_id = hotel.id
+        <where>
+            <if test="name != null and name != ''">
+                AND hotel_room.name LIKE '%${name}%'
+            </if>
+            <if test="hotelName != null and hotelName != ''">
+                AND hotel.name = #{hotelName}
+            </if>
+            <if test="hotelId != null">
+                AND hotel_room.hotel_id = #{hotelId}
+            </if>
+             <if test="hotelIds != null">
+                 AND hotel_room.hotel_id IN
+                 <foreach collection="hotelIds" item="hotelId" open="(" separator="," close=")">
+                     #{hotelId}
+                 </foreach>
+             </if>
+            <if test="startTime != null and endTime != null">
+                AND hotel_room.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+        </where>
+        ORDER BY hotel_room.id
+        <if test="current != null and size != null">
+            LIMIT #{current}, #{size}
+        </if>
+    </select>
+    
+
+
+<!--  分页查询总数  -->
+    <select id="queryTotal" resultType="integer">
+        SELECT COUNT(*)
+        FROM hotel_room INNER JOIN hotel ON hotel_room.hotel_id = hotel.id
+        <where>
+            <if test="name != null and name != ''">
+                AND hotel_room.name LIKE '%${name}%'
+            </if>
+            <if test="hotelName != null and hotelName != ''">
+                AND hotel.name = #{hotelName}
+            </if>
+            <if test="hotelId != null">
+                AND hotel_room.hotel_id = #{hotelId}
+            </if>
+            <if test="hotelIds != null">
+                AND hotel_room.hotel_id IN
+                <foreach collection="hotelIds" item="hotelId" open="(" separator="," close=")">
+                    #{hotelId}
+                </foreach>
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND hotel_room.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+
+
+
+<!--  分页查询结果映射  -->
+    <resultMap id="PageQueryResultMap" type="cn.kmbeast.pojo.vo.HotelRoomVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="hotel_id" property="hotelId"/>
+        <result column="cover" property="cover"/>
+        <result column="price" property="price"/>
+        <result column="discount" property="discount"/>
+        <result column="detail" property="detail"/>
+        <result column="create_time" property="createTime"/>
+        <result column="hotel_name" property="hotelName"/>
+    </resultMap>
+</mapper>
