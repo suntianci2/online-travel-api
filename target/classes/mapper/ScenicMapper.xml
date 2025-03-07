@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.ScenicMapper">
+
+    <!--  增加的sql语句  -->
+    <insert id="save">
+        INSERT INTO scenic(name,
+                           category_id,
+                           cover,
+                           vendor_id,
+                           save_ids,
+                           view_ids,
+                           address,
+                           status,
+                           create_time,
+                           detail)
+        VALUES(#{name},
+               #{categoryId},
+               #{cover},
+               #{vendorId},
+               #{saveIds},
+               #{viewIds},
+               #{address},
+               #{status},
+               #{createTime},
+               #{detail}
+               )
+    </insert>
+
+    <!--  批量删除景点  -->
+    <delete id="batchDelete">
+        DELETE FROM scenic
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--  修改景点信息  -->
+    <update id="update">
+        UPDATE scenic
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="categoryId != null and categoryId != ''">
+                category_id = #{categoryId},
+            </if>
+            <if test="cover != null and cover != ''">
+                cover = #{cover},
+            </if>
+            <if test="vendorId != null and vendorId != ''">
+                vendor_id = #{vendorId},
+            </if>
+            <if test="saveIds != null and saveIds != ''">
+                save_ids = #{saveIds},
+            </if>
+            <if test="viewIds != null and viewIds != ''">
+                view_ids = #{viewIds},
+            </if>
+            <if test="address != null and address != ''">
+                address = #{address},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="detail != null and detail != ''">
+                detail = #{detail},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!--  根据已有信息查询景点  -->
+    <select id="getByActive" resultMap="BasicScenicResultMap">
+        select id,
+                name,
+                category_id,
+                cover,
+                vendor_id,
+                save_ids,
+                view_ids,
+                address,
+                status,
+                create_time,
+                detail
+        FROM scenic
+        <where>
+            <if test="name != null and name != ''">
+                AND name = #{name}
+            </if>
+        </where>
+    </select>
+
+<!--  分页查询  -->
+<!--  使用子查询补充新增需求  -->
+<!--  使用ROUND函数保留小数位数  -->
+    <select id="query" resultMap="PageQueryResultMap">
+        SELECT scenic.id,
+                scenic.name,
+                scenic.category_id,
+                scenic.cover,
+                scenic.vendor_id,
+                scenic.save_ids,
+                scenic.view_ids,
+                scenic.address,
+                scenic.status,
+                scenic.create_time,
+                scenic.detail,
+                scenic_category.name AS category_name,
+                vendor.name AS vendor_name,
+                (SELECT ROUND(AVG(scenic_rating.score),1) FROM scenic_rating WHERE scenic_rating.scenic_id = scenic.id) AS rating_score
+        FROM scenic LEFT JOIN scenic_category ON scenic.category_id = scenic_category.id
+                    LEFT JOIN vendor ON scenic.vendor_id = vendor.id
+        <where>
+            <if test="id != null">
+                AND scenic.id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                AND scenic.name LIKE '%${name}%'
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                AND scenic_category.name = #{categoryName}
+            </if>
+            <if test="saveIds != null and saveIds != ''">
+                AND scenic.save_ids LIKE concat('%',#{saveIds},'%')
+            </if>
+            <if test="status != null">
+                AND scenic.status = #{status}
+            </if>
+            <if test="vendorId != null">
+                AND scenic.vendor_id = #{vendorId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+        </where>
+        ORDER BY scenic.id
+        <if test="current != null and size != null">
+            LIMIT #{current}, #{size}
+        </if>
+    </select>
+    
+
+
+<!--  分页查询总数  -->
+    <select id="queryTotal" resultType="integer">
+        SELECT COUNT(*)
+        FROM scenic LEFT JOIN scenic_category ON scenic.category_id = scenic_category.id
+                    LEFT JOIN vendor ON scenic.vendor_id = vendor.id
+        <where>
+            <if test="id != null">
+                AND scenic.id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                AND scenic.name LIKE '%${name}%'
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                AND scenic_category.name = #{categoryName}
+            </if>
+            <if test="saveIds != null and saveIds != ''">
+                AND scenic.save_ids LIKE concat('%',#{saveIds},'%')
+            </if>
+            <if test="status != null">
+                AND scenic.status = #{status}
+            </if>
+            <if test="vendorId != null">
+                AND scenic.vendor_id = #{vendorId}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+        </where>
+    </select>
+
+
+<!--  根据已有信息查询景点的结果映射  -->
+    <resultMap id="BasicScenicResultMap" type="cn.kmbeast.pojo.entity.Scenic">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="cover" property="cover"/>
+        <result column="vendor_id" property="vendorId"/>
+        <result column="save_ids" property="saveIds"/>
+        <result column="view_ids" property="viewIds"/>
+        <result column="address" property="address"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="detail" property="detail"/>
+    </resultMap>
+    
+<!--  分页查询结果映射  -->
+    <resultMap id="PageQueryResultMap" type="cn.kmbeast.pojo.vo.ScenicVO">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="category_id" property="categoryId"/>
+        <result column="cover" property="cover"/>
+        <result column="vendor_id" property="vendorId"/>
+        <result column="save_ids" property="saveIds"/>
+        <result column="view_ids" property="viewIds"/>
+        <result column="address" property="address"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="vendor_name" property="vendorName"/>
+        <result column="rating_score" property="ratingScore"/>
+        <result column="detail" property="detail"/>
+    </resultMap>
+
+<!--  更新收藏者id  -->
+    <update id="updateSaveIds">
+        UPDATE scenic SET save_ids = #{saveIds} WHERE id =#{id}
+    </update>
+
+</mapper>

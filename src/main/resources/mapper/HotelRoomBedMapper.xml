@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.HotelRoomBedMapper">
+<!--  新增  -->
+    <insert id="save">
+        INSERT INTO hotel_room_bed(number,
+                                   room_id,
+                                   status,
+                                   create_time)
+        VALUES (#{number},
+                #{roomId},
+                #{status},
+                #{createTime})
+    </insert>
+<!--  删除  -->
+    <delete id="batchDelete">
+        DELETE FROM hotel_room_bed
+        WHERE id in
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+<!--  修改  -->
+    <update id="update">
+        UPDATE hotel_room_bed
+        <set>
+            <if test="number != null">
+                number = #{number},
+            </if>
+            <if test="roomId != null">
+                room_id = #{roomId},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+<!--  分页查询 -->
+    <select id="query" resultMap="BaseQueryResultMap">
+        SELECT id,
+               number,
+               room_id,
+               status,
+               create_time
+        FROM hotel_room_bed
+        <where>
+            <if test="roomId != null">
+                room_id = #{roomId}
+            </if>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="startTime != null and endTime != null">
+                create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+        ORDER BY id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current}, #{size}
+        </if>
+    </select>
+<!--  分页查询总条数  -->
+    <select id="queryTotal" resultType="integer">
+        SELECT COUNT(*)
+        FROM hotel_room_bed
+        <where>
+            <if test="roomId != null">
+                room_id = #{roomId}
+            </if>
+            <if test="status != null">
+                status = #{status}
+            </if>
+            <if test="startTime != null and endTime != null">
+                create_time BETWEEN #{startTime} AND #{endTime}
+            </if>
+        </where>
+    </select>
+
+<!--  查询结果映射  -->
+    <resultMap id="BaseQueryResultMap" type="cn.kmbeast.pojo.entity.HotelRoomBed">
+        <id column="id" property="id"/>
+        <result column="number" property="number"/>
+        <result column="room_id" property="roomId"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+</mapper>
