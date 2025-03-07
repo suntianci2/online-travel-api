@@ -63,5 +63,6 @@ public class JwtInterceptor implements HandlerInterceptor {
         // 将解析出来的用户ID、用户角色放置于LocalThread中，当前线程可用
         LocalThreadHolder.setUserId(userId, roleId);
         return true;
+
     }
 }
