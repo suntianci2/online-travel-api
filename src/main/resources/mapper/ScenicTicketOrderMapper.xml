@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kmbeast.mapper.ScenicTicketOrderMapper">
+
+    <!--  增加的sql语句  -->
+    <insert id="save">
+        INSERT INTO scenic_ticket_order(user_id,
+                           ticket_id,
+                           concat_person,
+                           concat_phone,
+                           amount,
+                           buy_number,
+                           pay_status,
+                           pay_time,
+                           create_time)
+        VALUES(#{userId},
+               #{ticketId},
+               #{concatPerson},
+               #{concatPhone},
+               #{amount},
+               #{buyNumber},
+               #{payStatus},
+               #{payTime},
+               #{createTime})
+    </insert>
+
+    <!--  批量删除 -->
+    <delete id="batchDelete">
+        DELETE FROM scenic_ticket_order
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!--  修改信息  -->
+    <update id="update">
+        UPDATE scenic_ticket_order
+        <set>
+            <if test="ticketId != null">
+                ticket_id = #{ticketId},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="concatPerson != null and concatPerson != ''">
+                concat_person = #{concatPerson},
+            </if>
+            <if test="concatPhone != null and concatPhone != ''">
+                concat_phone = #{concatPhone},
+            </if>
+            <if test="amount != null">
+                amount = #{amount},
+            </if>
+            <if test="payStatus != null">
+                pay_status = #{payStatus},
+            </if>
+            <if test="payTime != null">
+                pay_time = #{payTime},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+
+<!--  分页查询  -->
+    <select id="query" resultMap="PageQueryResultMap">
+        SELECT scenic_ticket_order.id,
+                scenic_ticket_order.user_id,
+                scenic_ticket_order.ticket_id,
+                scenic_ticket_order.concat_person,
+                scenic_ticket_order.concat_phone,
+                scenic_ticket_order.amount,
+                scenic_ticket_order.buy_number,
+                scenic_ticket_order.pay_status,
+                scenic_ticket_order.pay_time,
+                scenic_ticket_order.create_time,
+                scenic_ticket.scenic_id AS scenic_id,
+                scenic.name AS scenic_name,
+                user.user_name AS user_name
+        FROM scenic_ticket_order INNER JOIN scenic_ticket ON scenic_ticket_order.ticket_id = scenic_ticket.id
+                                INNER JOIN user ON scenic_ticket_order.user_id = user.id
+                                INNER JOIN scenic ON scenic_ticket.scenic_id = scenic.id
+        <where>
+            <if test="userId != null">
+                AND scenic_ticket_order.user_id = #{userId}
+            </if>
+            <if test="payStatus != null">
+                AND scenic_ticket_order.pay_status = #{payStatus}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic_ticket_order.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="scenicIds != null">
+                AND scenic_ticket.scenic_id IN
+                <foreach collection="scenicIds" item="scenicId" open="(" separator="," close=")">
+                    #{scenicId}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY scenic_ticket_order.id DESC
+        <if test="current != null and size != null">
+            LIMIT #{current}, #{size}
+        </if>
+    </select>
+    
+
+
+<!--  分页查询总数  -->
+    <select id="queryTotal" resultType="integer">
+        SELECT COUNT(*)
+        FROM scenic_ticket_order INNER JOIN scenic_ticket ON scenic_ticket_order.ticket_id = scenic_ticket.id
+                                INNER JOIN user ON scenic_ticket_order.user_id = user.id
+                                INNER JOIN scenic ON scenic_ticket.scenic_id = scenic.id
+        <where>
+            <if test="userId != null">
+                AND scenic_ticket_order.user_id = #{userId}
+            </if>
+            <if test="payStatus != null">
+                AND scenic_ticket_order.pay_status = #{payStatus}
+            </if>
+            <if test="startTime != null and endTime != null">
+                AND scenic_ticket_order.create_time BETWEEN #{startTime} and #{endTime}
+            </if>
+            <if test="scenicIds != null">
+                AND scenic_ticket.scenic_id IN
+                <foreach collection="scenicIds" item="scenicId" open="(" separator="," close=")">
+                    #{scenicId}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+<!--  根据已有条件查询结果  -->
+    <select id="getByActive" resultMap="ScenicTicketOrderQueryResultMap">
+        SELECT id,
+                user_id,
+                ticket_id,
+                concat_person,
+                concat_phone,
+                amount,
+                buy_number,
+                pay_status,
+                pay_time,
+                create_time
+        FROM scenic_ticket_order
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+
+            <if test="ticketId != null">
+                AND ticket_id = #{ticketId}
+            </if>
+            <if test="concatPerson != null and concatPerson != ''">
+                AND concat_person = #{concatPerson}
+            </if>
+            <if test="concatPhone != null and concatPhone != ''">
+                AND concat_phone = #{concatPhone}
+            </if>
+            <if test="payStatus != null">
+                AND pay_status = #{payStatus}
+            </if>
+        </where>
+    </select>
+
+
+<!--  分页查询结果映射  -->
+    <resultMap id="PageQueryResultMap" type="cn.kmbeast.pojo.vo.ScenicTicketOrderVO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="ticket_id" property="ticketId"/>
+        <result column="concat_person" property="concatPerson"/>
+        <result column="concat_phone" property="concatPhone"/>
+        <result column="amount" property="amount"/>
+        <result column="buy_number" property="buyNumber"/>
+        <result column="pay_status" property="payStatus"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="scenic_id" property="scenicId"/>
+        <result column="scenic_name" property="scenicName"/>
+        <result column="user_name" property="userName"/>
+    </resultMap>
+
+<!--  酒店信息查询结果映射  -->
+    <resultMap id="ScenicTicketOrderQueryResultMap" type="cn.kmbeast.pojo.entity.ScenicTicketOrder">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="ticket_id" property="ticketId"/>
+        <result column="concat_person" property="concatPerson"/>
+        <result column="concat_phone" property="concatPhone"/>
+        <result column="amount" property="amount"/>
+        <result column="buy_number" property="buyNumber"/>
+        <result column="pay_status" property="payStatus"/>
+        <result column="pay_time" property="payTime"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+</mapper>
