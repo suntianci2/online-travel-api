@@ -60,6 +60,7 @@ public class ApiResult<T> extends Result<T> {
         result.setData(data);
         result.setTotal(total);
         return result;
+
     }
 
     public static <T> Result<T> success(String msg) {
